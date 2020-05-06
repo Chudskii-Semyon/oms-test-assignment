@@ -5,9 +5,15 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderModule } from './order/order.module';
 import { LoggerModule } from './logger/logger.module';
 import { Connection } from 'typeorm';
+import { ConfigModule } from './config/config.module';
 
 @Module({
-    imports: [TypeOrmModule.forRoot({}), OrderModule, LoggerModule],
+    imports: [
+        TypeOrmModule.forRoot({}),
+        ConfigModule,
+        OrderModule,
+        LoggerModule,
+    ],
     controllers: [AppController],
     providers: [AppService],
 })
