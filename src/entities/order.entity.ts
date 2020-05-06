@@ -1,4 +1,12 @@
-import { Column, CreateDateColumn, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn, } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    ManyToOne,
+    PrimaryGeneratedColumn,
+    UpdateDateColumn,
+} from 'typeorm';
 import { Product } from './product.entity';
 import { Employee } from './employee.entity';
 import { OrderStatusEnum } from '../enums/order-status.enum';
@@ -9,8 +17,7 @@ export class Order {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @OneToOne(type => Product)
-    @JoinColumn()
+    @ManyToOne(type => Product)
     public product: Product;
 
     @Column({ default: 0, type: 'float' })
@@ -19,22 +26,20 @@ export class Order {
 
     @Column({ type: 'float' })
     @Min(0)
-    public subTotal: number;
-
-    @Column({ type: 'float' })
-    @Min(0)
     public total: number;
 
-    @Column({ type: 'enum', enum: OrderStatusEnum, default: OrderStatusEnum.CREATED })
+    @Column({
+        type: 'enum',
+        enum: OrderStatusEnum,
+        default: OrderStatusEnum.CREATED,
+    })
     @Index()
     public status: OrderStatusEnum;
 
-    @OneToOne(type => Employee)
-    @JoinColumn()
+    @ManyToOne(type => Employee)
     public cashier: Employee;
 
-    @OneToOne(type => Employee)
-    @JoinColumn()
+    @ManyToOne(type => Employee, { nullable: true })
     public shopAssistant: Employee;
 
     @CreateDateColumn({ type: 'timestamp' })

@@ -1,8 +1,17 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+    Column,
+    CreateDateColumn,
+    Entity,
+    Index,
+    PrimaryGeneratedColumn,
+    Unique,
+    UpdateDateColumn,
+} from 'typeorm';
 import { EmployeeRoleEnum } from '../enums/employee-role.enum';
 import { IsEmail, MinLength } from 'class-validator';
 
 @Entity()
+@Unique(['email'])
 export class Employee {
     @PrimaryGeneratedColumn()
     public id: number;
