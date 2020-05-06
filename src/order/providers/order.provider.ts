@@ -1,12 +1,8 @@
 import { OrderService } from '../order.service';
 import { LoggerService } from '../../logger/logger.service';
+import { Provider } from '@nestjs/common';
 
-export const orderProviders = [
+export const orderProviders: Provider[] = [
     OrderService,
     LoggerService,
-    // {
-    //     provide: ORDER_REPOSITORY_TOKEN,
-    //     useFactory: (connection: Connection) => connection.getRepository(Order),
-    // inject: ['DATABASE_CONNECTION'],
-    // },
 ];
