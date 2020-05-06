@@ -6,6 +6,7 @@ import { OrderModule } from './order/order.module';
 import { LoggerModule } from './logger/logger.module';
 import { Connection } from 'typeorm';
 import { ConfigModule } from './config/config.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
     imports: [
@@ -13,6 +14,7 @@ import { ConfigModule } from './config/config.module';
         ConfigModule,
         OrderModule,
         LoggerModule,
+        AuthModule,
     ],
     controllers: [AppController],
     providers: [AppService],
