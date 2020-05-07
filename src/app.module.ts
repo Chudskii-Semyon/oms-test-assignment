@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { OrderModule } from './order/order.module';
+import { OrderModule } from './modules/order/order.module';
 import { LoggerModule } from './logger/logger.module';
 import { Connection } from 'typeorm';
 import { ConfigModule } from './config/config.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { EmployeeModule } from './modules/employee/employee.module';
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import { AuthModule } from './auth/auth.module';
         OrderModule,
         LoggerModule,
         AuthModule,
+        EmployeeModule,
     ],
     controllers: [AppController],
     providers: [AppService],

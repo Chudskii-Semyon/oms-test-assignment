@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { CreateOrderDto } from './DTOs/create-order.dto';
-import { LoggerService } from '../logger/logger.service';
+import { LoggerService } from '../../logger/logger.service';
 import { OrderService } from './order.service';
 import { Order } from 'src/entities/order.entity';
 

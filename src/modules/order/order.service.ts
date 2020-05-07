@@ -1,14 +1,14 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { LoggerService } from '../logger/logger.service';
+import { LoggerService } from '../../logger/logger.service';
 import { CreateOrderDto } from './DTOs/create-order.dto';
 import { Repository } from 'typeorm';
-import { Order } from '../entities/order.entity';
+import { Order } from '../../entities/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Product } from '../entities/product.entity';
-import { Employee } from '../entities/employee.entity';
-import { OrderStatusEnum } from '../enums/order-status.enum';
-import { CONFIG_TOKEN } from '../config/config.constants';
-import { IConfigSchema } from '../config/schema.interface';
+import { Product } from '../../entities/product.entity';
+import { Employee } from '../../entities/employee.entity';
+import { OrderStatusEnum } from '../../enums/order-status.enum';
+import { CONFIG_TOKEN } from '../../config/config.constants';
+import { IConfigSchema } from '../../config/schema.interface';
 
 @Injectable()
 export class OrderService {
