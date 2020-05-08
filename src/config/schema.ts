@@ -16,4 +16,17 @@ export const schema = {
             env: 'DISCOUNT_NUMBER_OF_MONTH',
         },
     },
+
+    auth: {
+        secret: {
+            format: String,
+            default: 'secret',
+            env: 'AUTH_TOKEN_SECRET',
+        },
+        expirationTimeSeconds: {
+            format: Number,
+            default: 60 * 60,
+            env: 'AUTH_TOKEN_EXPIRATION_TIME_SECONDS',
+        },
+    },
 };
