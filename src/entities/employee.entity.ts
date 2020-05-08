@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { EmployeeRoleEnum } from '../enums/employee-role.enum';
 import { IsEmail, MinLength } from 'class-validator';
+import { Exclude } from 'class-transformer';
 
 @Entity()
 @Unique(['email'])
@@ -18,6 +19,7 @@ export class Employee {
 
     @Column({ type: 'enum', enum: EmployeeRoleEnum })
     @Index()
+    @Exclude()
     public role: EmployeeRoleEnum;
 
     @Column()
@@ -25,6 +27,7 @@ export class Employee {
     public name: string;
 
     @Column()
+    @Exclude()
     public password: string;
 
     @Column()
@@ -37,4 +40,8 @@ export class Employee {
 
     @UpdateDateColumn({ type: 'timestamp' })
     public updatedAt: Date;
+
+    constructor(partial: Partial<Employee>) {
+        Object.assign(this, partial);
+    }
 }
