@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Employee } from '../../../entities/employee.entity';
+import { EmployeeRoleEnum } from '../../../enums/employee-role.enum';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -8,7 +9,7 @@ export class RolesGuard implements CanActivate {
     }
 
     canActivate(context: ExecutionContext): boolean {
-        const roles = this.reflector.get<string[]>('roles', context.getHandler());
+        const roles = this.reflector.get<EmployeeRoleEnum[]>('roles', context.getHandler());
         if (!roles) {
             return true;
         }
@@ -16,6 +17,8 @@ export class RolesGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
 
         const user: Employee = request.user;
-        return roles.includes(user.role);
+
+        // admin have access to all endpoints
+        return roles.includes(user.role) || user.role === EmployeeRoleEnum.ADMIN;
     }
 }
