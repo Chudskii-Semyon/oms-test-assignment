@@ -5,6 +5,7 @@ import {
     Index,
     ManyToOne,
     PrimaryGeneratedColumn,
+    RelationId,
     UpdateDateColumn,
 } from 'typeorm';
 import { Product } from './product.entity';
@@ -17,7 +18,7 @@ export class Order {
     @PrimaryGeneratedColumn()
     public id: number;
 
-    @ManyToOne(type => Product)
+    @ManyToOne(type => Product, { eager: true })
     public product: Product;
 
     @Column({ default: 0, type: 'float' })
@@ -39,8 +40,14 @@ export class Order {
     @ManyToOne(type => Employee)
     public cashier: Employee;
 
+    @RelationId((order: Order) => order.cashier)
+    public cashierId: number;
+
     @ManyToOne(type => Employee, { nullable: true })
     public shopAssistant: Employee;
+
+    @RelationId((order: Order) => order.shopAssistant)
+    public shopAssistantId: number;
 
     @CreateDateColumn({ type: 'timestamp' })
     public createdAt: Date;
