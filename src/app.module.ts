@@ -8,6 +8,8 @@ import { Connection } from 'typeorm';
 import { ConfigModule } from './config/config.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ReceiptModule } from './modules/receipt/receipt.module';
+import { EmployeeModule } from './modules/employee/employee.module';
+import { ProductModule } from './modules/product/product.module';
 
 @Module({
     imports: [
@@ -17,6 +19,8 @@ import { ReceiptModule } from './modules/receipt/receipt.module';
         LoggerModule,
         AuthModule,
         ReceiptModule,
+        EmployeeModule,
+        ProductModule,
     ],
     controllers: [AppController],
     providers: [

@@ -5,8 +5,10 @@ import {
     Param,
     Post,
     Query,
+    Req,
     UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { CreateOrderDto } from './DTOs/create-order.dto';
 import { LoggerService } from '../../logger/logger.service';
 import { OrderService } from './order.service';
@@ -17,6 +19,7 @@ import { EmployeeRoleEnum } from '../../enums/employee-role.enum';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { GetOrdersDto } from './DTOs/get-orders.dto';
 import { GetOrderDto } from './DTOs/get-order.dto';
+import { Employee } from '../../entities/employee.entity';
 
 const { CASHIER, ACCOUNTANT, SHOP_ASSISTANT } = EmployeeRoleEnum;
 
@@ -62,7 +65,7 @@ export class OrderController {
 
     @Post()
     @Roles(CASHIER)
-    public async createOrder(@Body() createOrderInput: CreateOrderDto): Promise<Order> {
+    public async createOrder(@Body() createOrderInput: CreateOrderDto, @Req() req: Request): Promise<Order> {
         const method = 'createOrder';
         this.logger.log({
                 message: 'proceed createOrder',
@@ -71,6 +74,7 @@ export class OrderController {
             }, this.loggerContext,
         );
 
-        return await this.orderService.createOrder(createOrderInput);
+        const { id } = req.user as Employee;
+        return await this.orderService.createOrder(createOrderInput, id);
     }
 }

@@ -1,11 +1,10 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
 import { CreateOrderDto } from './DTOs/create-order.dto';
 import { Between, Repository } from 'typeorm';
 import { Order } from '../../entities/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from '../../entities/product.entity';
-import { Employee } from '../../entities/employee.entity';
 import { OrderStatusEnum } from '../../enums/order-status.enum';
 import { CONFIG_TOKEN } from '../../config/config.constants';
 import { IConfigSchema } from '../../config/schema.interface';
@@ -13,6 +12,8 @@ import { GetOrdersDto } from './DTOs/get-orders.dto';
 import { CouldNotGetOrdersError } from '../../errors/CouldNotGetOrdersError';
 import { GetOrderDto } from './DTOs/get-order.dto';
 import { OrderNotFoundError } from '../../errors/OrderNotFoundError';
+import { ProductNotFoundError } from '../../errors/ProductNotFoundError';
+import { CouldNotCreateOrderError } from '../../errors/CouldNotCreateOrderError';
 
 @Injectable()
 export class OrderService {
@@ -83,7 +84,7 @@ export class OrderService {
         }
     }
 
-    public async createOrder(createOrderInput: CreateOrderDto): Promise<Order> {
+    public async createOrder(createOrderInput: CreateOrderDto, employeeId: number): Promise<Order> {
         const method = 'createOrder';
         const { productId } = createOrderInput;
 
@@ -102,17 +103,16 @@ export class OrderService {
                 e.stack,
                 this.loggerContext,
             );
-            throw new HttpException(
-                `Product with id ${productId} not found`,
-                HttpStatus.BAD_REQUEST,
-            );
+            throw new ProductNotFoundError(`Product with id ${productId} not found`);
         }
 
         this.logger.log({
-            message: 'got product from database',
-            product,
-            method,
-        }, this.loggerContext);
+                message: 'got product from database',
+                product,
+                method,
+            },
+            this.loggerContext,
+        );
 
         const discount = this.calculateProductDiscount(product);
 
@@ -122,7 +122,7 @@ export class OrderService {
                 product,
                 discount,
                 total: product.price - discount,
-                cashier: { id: 1 } as Employee,
+                cashierId: employeeId,
                 status: OrderStatusEnum.CREATED,
             });
 
@@ -145,14 +145,19 @@ export class OrderService {
                 e.stack,
                 this.loggerContext,
             );
-            throw new HttpException(
-                `Could not create order. Error: ${e.message}`,
-                HttpStatus.INTERNAL_SERVER_ERROR,
-            );
+            throw new CouldNotCreateOrderError(`Could not create order. Error: ${e.message}`);
         }
     }
 
     private calculateProductDiscount(product: Product): number {
+        const method = 'calculateProductDiscount';
+        this.logger.log({
+                message: 'Start calculating proudct discount',
+                product,
+                method,
+            },
+            this.loggerContext
+        );
         const { numberOfMonths, percent } = this.config.discount;
         const productCreatedDate = product.createdAt;
 
