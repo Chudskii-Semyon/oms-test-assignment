@@ -9,11 +9,14 @@ import { ConfigModule } from '../../config/config.module';
 import { LoggerService } from '../../logger/logger.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Employee } from '../../entities/employee.entity';
+import { JwtStrategy } from './jwt.strategy';
+import { EmployeeModule } from '../employee/employee.module';
 
 @Module({
     imports: [
         ConfigModule,
-        PassportModule,
+        EmployeeModule,
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         TypeOrmModule.forFeature([Employee]),
         JwtModule.registerAsync({
             imports: [ConfigModule],
@@ -26,7 +29,7 @@ import { Employee } from '../../entities/employee.entity';
             inject: [CONFIG_TOKEN],
         }),
     ],
-    providers: [AuthService, LoggerService],
+    providers: [AuthService, LoggerService, JwtStrategy],
     controllers: [AuthController],
 })
 export class AuthModule {
