@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { LoggerService } from '../../logger/logger.service';
 import { CreateOrderDto } from './DTOs/create-order.dto';
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Order } from '../../entities/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Product } from '../../entities/product.entity';
@@ -9,6 +9,10 @@ import { Employee } from '../../entities/employee.entity';
 import { OrderStatusEnum } from '../../enums/order-status.enum';
 import { CONFIG_TOKEN } from '../../config/config.constants';
 import { IConfigSchema } from '../../config/schema.interface';
+import { GetOrdersDto } from './DTOs/get-orders.dto';
+import { CouldNotGetOrdersError } from '../../errors/CouldNotGetOrdersError';
+import { GetOrderDto } from './DTOs/get-order.dto';
+import { OrderNotFoundError } from '../../errors/OrderNotFoundError';
 
 @Injectable()
 export class OrderService {
@@ -23,6 +27,62 @@ export class OrderService {
         @InjectRepository(Product)
         private readonly productRepository: Repository<Product>,
     ) {
+    }
+
+    public async getOrder(getOrderInput: GetOrderDto): Promise<Order> {
+        const method = 'getOrder';
+
+        const { orderId } = getOrderInput;
+
+        try {
+            const order = await this.orderRepository.findOneOrFail({ id: orderId });
+
+            this.logger.log({
+                    message: 'Got order from database',
+                    order,
+                    method,
+                }, this.loggerContext,
+            );
+
+            return order;
+        } catch (e) {
+            this.logger.error({
+                    message: 'Could not find order by id',
+                    id: orderId,
+                    method,
+                },
+                e.stack,
+                this.loggerContext,
+            );
+
+            throw new OrderNotFoundError(`Could not find order with id: ${orderId}`);
+        }
+    }
+
+    public async getOrders(dateRange: GetOrdersDto): Promise<Order[]> {
+        const method = 'getOrders';
+
+        const { start, end } = dateRange;
+
+        try {
+            return this.orderRepository.find({
+                where: {
+                    createdAt: Between(start, end),
+                },
+            });
+        } catch (e) {
+            this.logger.error({
+                    message: `Could not get orders from database. Error: ${e.message}`,
+                    dateRange,
+                    method,
+                },
+                e.stack,
+                this.loggerContext,
+            );
+            throw new CouldNotGetOrdersError(`
+            Could not get orders from database by date range (start: ${start}, end: ${end}).
+            `);
+        }
     }
 
     public async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -73,6 +133,9 @@ export class OrderService {
                 newOrder,
                 method,
             });
+
+            // I think it will be a good idea if here will be some event emitter / socket
+            // in order to shop assistant could see order creation in real time
 
             return await this.orderRepository.save(newOrder);
         } catch (e) {
