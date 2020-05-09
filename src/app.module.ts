@@ -7,7 +7,7 @@ import { LoggerModule } from './logger/logger.module';
 import { Connection } from 'typeorm';
 import { ConfigModule } from './config/config.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { EmployeeModule } from './modules/employee/employee.module';
+import { ReceiptModule } from './modules/receipt/receipt.module';
 
 @Module({
     imports: [
@@ -16,7 +16,7 @@ import { EmployeeModule } from './modules/employee/employee.module';
         OrderModule,
         LoggerModule,
         AuthModule,
-        EmployeeModule,
+        ReceiptModule,
     ],
     controllers: [AppController],
     providers: [

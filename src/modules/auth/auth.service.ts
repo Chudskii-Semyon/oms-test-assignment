@@ -7,7 +7,7 @@ import { LoginDto } from './DTOs/login.dto';
 import { compare } from 'bcrypt';
 import { CONFIG_TOKEN } from '../../config/config.constants';
 import { IConfigSchema } from '../../config/schema.interface';
-import { InvalidEmailOrPasswordError } from '../../errors/InvalidEmailOrPassword';
+import { InvalidEmailOrPasswordError } from '../../errors/InvalidEmailOrPasswordError';
 import { JwtService } from '@nestjs/jwt';
 import { AuthDto } from './DTOs/auth.dto';
 

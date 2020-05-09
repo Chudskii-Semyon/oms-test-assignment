@@ -10,12 +10,10 @@ import { LoggerService } from '../../logger/logger.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Employee } from '../../entities/employee.entity';
 import { JwtStrategy } from './jwt.strategy';
-import { EmployeeModule } from '../employee/employee.module';
 
 @Module({
     imports: [
         ConfigModule,
-        EmployeeModule,
         PassportModule.register({ defaultStrategy: 'jwt' }),
         TypeOrmModule.forFeature([Employee]),
         JwtModule.registerAsync({
