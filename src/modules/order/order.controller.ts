@@ -48,10 +48,11 @@ export class OrderController {
     @Get(':orderId')
     @Roles(SHOP_ASSISTANT, ACCOUNTANT)
     public async getOrder(@Param() getOrderInput: GetOrderDto): Promise<Order> {
+        const method = 'getOrder';
         this.logger.log({
                 message: 'proceed get order endpoint',
                 params: getOrderInput,
-                method: 'getOrders',
+                method,
             },
             this.loggerContext,
         );
@@ -61,14 +62,15 @@ export class OrderController {
 
     @Post()
     @Roles(CASHIER)
-    public async createOrder(@Body() createOrderDto: CreateOrderDto): Promise<Order> {
+    public async createOrder(@Body() createOrderInput: CreateOrderDto): Promise<Order> {
+        const method = 'createOrder';
         this.logger.log({
                 message: 'proceed createOrder',
-                body: createOrderDto,
-                method: 'createOrder',
+                body: createOrderInput,
+                method,
             }, this.loggerContext,
         );
 
-        return await this.orderService.createOrder(createOrderDto);
+        return await this.orderService.createOrder(createOrderInput);
     }
 }

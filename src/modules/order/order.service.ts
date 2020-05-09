@@ -85,9 +85,9 @@ export class OrderService {
         }
     }
 
-    public async createOrder(createOrderDto: CreateOrderDto): Promise<Order> {
+    public async createOrder(createOrderInput: CreateOrderDto): Promise<Order> {
         const method = 'createOrder';
-        const { productId } = createOrderDto;
+        const { productId } = createOrderInput;
 
         let product: Product;
 
