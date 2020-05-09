@@ -66,9 +66,7 @@ export class OrderService {
 
         try {
             return this.orderRepository.find({
-                where: {
-                    createdAt: Between(start, end),
-                },
+                createdAt: Between(start, end),
             });
         } catch (e) {
             this.logger.error({
