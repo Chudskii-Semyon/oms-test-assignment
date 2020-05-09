@@ -3,11 +3,11 @@ import { LoggerService } from '../../logger/logger.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Employee } from '../../entities/employee.entity';
 import { Repository } from 'typeorm';
-import { LoginDto } from './DTOs/employee-login.dto';
+import { LoginDto } from './DTOs/login.dto';
 import { compare } from 'bcrypt';
 import { CONFIG_TOKEN } from '../../config/config.constants';
 import { IConfigSchema } from '../../config/schema.interface';
-import { InvalidEmailOrPasswordError } from '../../errors/EmployeeNotFoundError';
+import { InvalidEmailOrPasswordError } from '../../errors/InvalidEmailOrPassword';
 import { JwtService } from '@nestjs/jwt';
 import { AuthDto } from './DTOs/auth.dto';
 
@@ -41,9 +41,9 @@ export class AuthService {
                 this.loggerContext,
             );
 
-            const isEqual = await compare(password, employee.password);
+            const isPasswordMatches = await compare(password, employee.password);
 
-            if (!isEqual) {
+            if (!isPasswordMatches) {
                 throw new InvalidEmailOrPasswordError();
             }
         } catch (e) {

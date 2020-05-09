@@ -19,7 +19,9 @@ import { EmployeeModule } from './modules/employee/employee.module';
         EmployeeModule,
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        AppService,
+    ],
 })
 export class AppModule {
     constructor(

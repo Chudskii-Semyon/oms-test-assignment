@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './DTOs/employee-login.dto';
+import { LoginDto } from './DTOs/login.dto';
 import { AuthDto } from './DTOs/auth.dto';
 import { LoggerService } from '../../logger/logger.service';
 
@@ -14,13 +14,14 @@ export class AuthController {
     ) {
     }
 
-    @Post('/login')
+    @Post('login')
     public async login(@Body() loginInput: LoginDto): Promise<AuthDto> {
         this.logger.log({
-            message: 'Proceed login',
-            loginInput,
-            method: 'login',
-        }, this.loggerContext);
+                message: 'Proceed login',
+                loginInput,
+                method: 'login',
+            }, this.loggerContext,
+        );
         return this.authService.login(loginInput);
     }
 }

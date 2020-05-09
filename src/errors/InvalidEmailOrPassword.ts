@@ -4,8 +4,7 @@ export const INVALID_EMAIL_OR_PASSWORD_ERROR =
     'INVALID_EMAIL_OR_PASSWORD_ERROR';
 
 export class InvalidEmailOrPasswordError extends HttpException {
-    constructor(
-    ) {
+    constructor() {
         super(
             {
                 message: 'Invalid email or password',
@@ -13,6 +12,5 @@ export class InvalidEmailOrPasswordError extends HttpException {
             },
             HttpStatus.BAD_REQUEST,
         );
-
     }
 }
