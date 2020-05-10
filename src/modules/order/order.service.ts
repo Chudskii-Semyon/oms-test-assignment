@@ -14,6 +14,14 @@ import { GetOrderDto } from './DTOs/get-order.dto';
 import { OrderNotFoundError } from '../../errors/OrderNotFoundError';
 import { ProductNotFoundError } from '../../errors/ProductNotFoundError';
 import { CouldNotCreateOrderError } from '../../errors/CouldNotCreateOrderError';
+import { UpdateOrderStatusDto } from './DTOs/update-order-status.dto';
+import { Employee } from '../../entities/employee.entity';
+import { EmployeeRoleEnum } from '../../enums/employee-role.enum';
+import { ForbiddenResourceError } from '../../errors/ForbiddenResourceError';
+import { CouldNotUpdateOrderError } from '../../errors/CouldNotUpdateOrderError';
+
+const { COMPLETED, PAID } = OrderStatusEnum;
+const { SHOP_ASSISTANT, CASHIER } = EmployeeRoleEnum;
 
 @Injectable()
 export class OrderService {
@@ -84,7 +92,10 @@ export class OrderService {
         }
     }
 
-    public async createOrder(createOrderInput: CreateOrderDto, employeeId: number): Promise<Order> {
+    public async createOrder(
+        createOrderInput: CreateOrderDto,
+        employeeId: number,
+    ): Promise<Order> {
         const method = 'createOrder';
         const { productId } = createOrderInput;
 
@@ -132,7 +143,7 @@ export class OrderService {
                 method,
             });
 
-            // I think it will be a good idea if here will be some event emitter / socket
+            // I think it will be a good idea if there will be some event emitter / socket
             // in order to shop assistant could see order creation in real time
 
             return await this.orderRepository.save(newOrder);
@@ -149,6 +160,43 @@ export class OrderService {
         }
     }
 
+    public async updateOrderStatus(
+        updateOrderStatusInput: UpdateOrderStatusDto,
+        employee: Employee,
+    ): Promise<Order> {
+        const method = 'updateOrderStatus';
+
+        const { status, orderId } = updateOrderStatusInput;
+        const { role } = employee;
+
+        this.validateStatusOrFail(status, role);
+
+        let order: Order;
+        try {
+            order = await this.orderRepository.findOneOrFail(orderId);
+        } catch (e) {
+            const errorMessage = `Could not find order with id: ${orderId}.`;
+
+            this.logger.error({
+                    message: errorMessage + `Error: ${e.message}`,
+                    id: orderId,
+                    method,
+                },
+                e.stack,
+                this.loggerContext,
+            );
+            throw new OrderNotFoundError(errorMessage);
+        }
+
+        if (status === PAID) {
+            return this.updateOrderStatusToPaid(order, employee, status);
+        }
+
+        if (status === COMPLETED) {
+            return this.updateOrderStatusToCompleted(order, employee, status);
+        }
+    }
+
     private calculateProductDiscount(product: Product): number {
         const method = 'calculateProductDiscount';
         this.logger.log({
@@ -156,7 +204,7 @@ export class OrderService {
                 product,
                 method,
             },
-            this.loggerContext
+            this.loggerContext,
         );
         const { numberOfMonths, percent } = this.config.discount;
         const productCreatedDate = product.createdAt;
@@ -169,5 +217,90 @@ export class OrderService {
         }
 
         return 0;
+    }
+
+    private validateStatusOrFail(status, role): boolean {
+        if (status === COMPLETED && role !== SHOP_ASSISTANT) {
+            throw new ForbiddenResourceError();
+        }
+
+        if (status === PAID && role !== CASHIER) {
+            throw new ForbiddenResourceError();
+        }
+
+        return true;
+    }
+
+    private async updateOrderStatusToCompleted(
+        order: Order,
+        employee: Employee,
+        status: OrderStatusEnum,
+    ): Promise<Order> {
+        const method = 'findAndUpdateOrderStatusToCompleted';
+
+        const { role } = employee;
+        if (role !== SHOP_ASSISTANT) {
+            throw new ForbiddenResourceError();
+        }
+
+        try {
+            return this.orderRepository.save({
+                ...order,
+                status,
+                shopAssistantId: employee.id,
+            });
+        } catch (e) {
+            const errorMessage = `Could not update order with id: ${order.id} to status: ${status}.`;
+
+            this.logger.error({
+                    message: errorMessage + ` Error: ${e.message}`,
+                    order,
+                    employee,
+                    status,
+                    method,
+                },
+                e.stack,
+                this.loggerContext,
+            );
+
+            throw new CouldNotUpdateOrderError(errorMessage);
+        }
+    }
+
+    private async updateOrderStatusToPaid(
+        order: Order,
+        employee: Employee,
+        status: OrderStatusEnum,
+    ): Promise<Order> {
+        const method = 'updateOrderStatusToPaid';
+
+        const { cashierId } = order;
+        const { role, id: employeeId } = employee;
+
+        if (cashierId !== employeeId || role !== CASHIER) {
+            throw new ForbiddenResourceError();
+        }
+
+        try {
+            return this.orderRepository.save({
+                ...order,
+                status,
+            });
+        } catch (e) {
+            const errorMessage = `Could not update order with id: ${order.id} to status: ${status}.`;
+
+            this.logger.error({
+                    message: errorMessage + ` Error: ${e.message}`,
+                    order,
+                    employee,
+                    status,
+                    method,
+                },
+                e.stack,
+                this.loggerContext,
+            );
+
+            throw new CouldNotUpdateOrderError(errorMessage);
+        }
     }
 }
