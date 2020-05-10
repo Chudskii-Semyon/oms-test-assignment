@@ -4,6 +4,7 @@ import {
     Get,
     Param,
     Post,
+    Put,
     Query,
     Req,
     UseGuards,
@@ -20,6 +21,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { GetOrdersDto } from './DTOs/get-orders.dto';
 import { GetOrderDto } from './DTOs/get-order.dto';
 import { Employee } from '../../entities/employee.entity';
+import { UpdateOrderStatusDto } from './DTOs/update-order-status.dto';
 
 const { CASHIER, ACCOUNTANT, SHOP_ASSISTANT } = EmployeeRoleEnum;
 
@@ -76,5 +78,27 @@ export class OrderController {
 
         const { id } = req.user as Employee;
         return await this.orderService.createOrder(createOrderInput, id);
+    }
+
+    @Put(':orderId/status')
+    @Roles(SHOP_ASSISTANT, CASHIER)
+    public async updateOrderStatus(
+        @Body() updateOrderStatusInput: UpdateOrderStatusDto,
+        @Req() req: Request,
+    ): Promise<Order> {
+        const method = 'updateOrderStatus';
+
+        const employee = req.user as Employee;
+
+        this.logger.log({
+                message: 'Proceed updateOrderStatus endpoint',
+                body: updateOrderStatusInput,
+                employee,
+                method,
+            },
+            this.loggerContext,
+        );
+
+        return this.orderService.updateOrderStatus(updateOrderStatusInput, employee);
     }
 }

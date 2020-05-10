@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Employee } from '../../../entities/employee.entity';
 import { EmployeeRoleEnum } from '../../../enums/employee-role.enum';
+import { ForbiddenResourceError } from '../../../errors/ForbiddenResourceError';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,7 +19,10 @@ export class RolesGuard implements CanActivate {
 
         const user: Employee = request.user;
 
-        // admin have access to all endpoints
-        return roles.includes(user.role) || user.role === EmployeeRoleEnum.ADMIN;
+        if (roles.includes(user.role) || user.role === EmployeeRoleEnum.ADMIN) {
+            return true;
+        }
+
+        throw new ForbiddenResourceError();
     }
 }
