@@ -1,7 +1,7 @@
 import { OrderStatusEnum } from '../../../enums/order-status.enum';
 import { IsEnum, IsIn, IsInt, IsNotEmpty, IsPositive } from 'class-validator';
 
-const {COMPLETED, PAID} = OrderStatusEnum;
+const { COMPLETED, PAID } = OrderStatusEnum;
 
 export class UpdateOrderStatusDto {
     @IsEnum(OrderStatusEnum)

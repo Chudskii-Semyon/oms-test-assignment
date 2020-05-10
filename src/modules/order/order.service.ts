@@ -44,7 +44,7 @@ export class OrderService {
         const { orderId } = getOrderInput;
 
         try {
-            const order = await this.orderRepository.findOneOrFail({ id: orderId });
+            const order = await this.orderRepository.findOneOrFail(orderId);
 
             this.logger.log({
                     message: 'Got order from database',

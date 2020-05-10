@@ -7,7 +7,7 @@ export const schema = {
     discount: {
         percent: {
             format: Number,
-            default: 50,
+            default: 20,
             env: 'DISCOUNT_PERCENT',
         },
         numberOfMonths: {

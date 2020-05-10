@@ -1,9 +1,14 @@
-import { IsDateString } from 'class-validator';
+import { IsDate, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class GetOrdersDto {
-    @IsDateString()
-    public start: string = new Date(2000, 0, 1).toISOString();
+    @IsDate()
+    @Type(() => Date)
+    @IsOptional()
+    public start?: Date = new Date(2000, 0, 0);
 
-    @IsDateString()
-    public end: string = new Date(Date.now()).toISOString();
+    @IsDate()
+    @Type(() => Date)
+    @IsOptional()
+    public end?: Date = new Date(Date.now());
 }

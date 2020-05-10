@@ -3,7 +3,7 @@ import {
     CreateDateColumn,
     Entity,
     PrimaryGeneratedColumn,
-    UpdateDateColumn
+    UpdateDateColumn,
 } from 'typeorm';
 import { Min, MinLength } from 'class-validator';
 
@@ -20,7 +20,8 @@ export class Product {
     @Min(0)
     public price: number;
 
-    @CreateDateColumn({ type: 'timestamp' })
+    // @CreateDateColumn({ type: 'timestamp' })
+    @Column({ type: 'timestamp' })
     public createdAt: Date;
 
     @UpdateDateColumn({ type: 'timestamp' })
