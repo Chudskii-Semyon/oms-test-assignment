@@ -18,6 +18,8 @@ import { GetOrdersDto } from '../DTOs/get-orders.dto';
 import { CreateOrderDto } from '../DTOs/create-order.dto';
 import { mockProduct } from '../../../__tests__/mocks/product.mock';
 import { mockEmployee } from '../../../__tests__/mocks/employee.mock';
+import { UpdateOrderStatusDto } from '../DTOs/update-order-status.dto';
+import { OrderStatusEnum } from '../../../enums/order-status.enum';
 
 describe('Order Controller', () => {
     let controller: OrderController;
@@ -86,6 +88,23 @@ describe('Order Controller', () => {
 
             expect(result).toEqual(mockOrder);
             expect(orderServiceSpy).toBeCalledWith(args, mockEmployee.id);
+        });
+    });
+
+    describe('updateOrderStatus', () => {
+        const args: UpdateOrderStatusDto = {
+            orderId: mockOrder.id,
+            status: OrderStatusEnum.PAID,
+        };
+        const mockRequest = { user: mockEmployee } as unknown as Request;
+
+        it('should return order', async () => {
+            const orderServiceSpy = jest.spyOn(mockOrderService, 'updateOrderStatus');
+
+            const result = await controller.updateOrderStatus(args, mockRequest);
+
+            expect(result).toEqual(mockOrder);
+            expect(orderServiceSpy).toBeCalledWith(args, mockEmployee);
         });
     });
 });

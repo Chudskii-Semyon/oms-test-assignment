@@ -21,6 +21,8 @@ import { mockEmployee } from '../../../__tests__/mocks/employee.mock';
 import { mockOrderRepository } from '../../../__tests__/mocks/order-repository.mock';
 import { mockProductRepository } from '../../../__tests__/mocks/product-repository.mock';
 import { COULD_NOT_CREATE_ORDER_ERROR } from '../../../errors/CouldNotCreateOrderError';
+import { UpdateOrderStatusDto } from '../DTOs/update-order-status.dto';
+import { FORBIDDEN_RESOURCE_ERROR } from '../../../errors/ForbiddenResourceError';
 
 describe('OrderService', () => {
     let service: OrderService;
@@ -168,6 +170,41 @@ describe('OrderService', () => {
                 fail('did not throw expected error');
             } catch (e) {
                 expect(e.response.status).toBe(COULD_NOT_CREATE_ORDER_ERROR);
+            }
+        });
+    });
+
+    describe('updateOrderStatus', () => {
+
+        it('should update and return updated order', async () => {
+            const expectedResult: Order = { ...mockOrder, status: OrderStatusEnum.PAID };
+
+            const mockOrderRepositorySaveSpy = jest.spyOn(mockOrderRepository, 'save')
+                .mockReturnValue(expectedResult);
+            const mockOrderRepositoryFindOneOrFailSpy = jest.spyOn(mockOrderRepository, 'findOneOrFail')
+                .mockReturnValue(mockOrder);
+
+            const args: UpdateOrderStatusDto = { orderId: mockOrder.id, status: OrderStatusEnum.PAID };
+            const saveOrderQuery = {
+                ...mockOrder,
+                status: OrderStatusEnum.PAID,
+            } as Order;
+
+            const result = await service.updateOrderStatus(args, mockEmployee);
+
+            expect(result).toEqual(expectedResult);
+            expect(mockOrderRepositoryFindOneOrFailSpy).toBeCalledWith(mockOrder.id);
+            expect(mockOrderRepositorySaveSpy).toBeCalledWith(saveOrderQuery);
+        });
+
+        it('should throw FORBIDDEN_RESOURCE_ERROR', async () => {
+            const args: UpdateOrderStatusDto = {orderId: mockOrder.id, status: OrderStatusEnum.COMPLETED}
+            try {
+                await service.updateOrderStatus(args, mockEmployee);
+
+                fail('did not throw expected error');
+            } catch (e) {
+                expect(e.response.status).toBe(FORBIDDEN_RESOURCE_ERROR);
             }
         });
     });
