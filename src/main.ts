@@ -13,7 +13,6 @@ async function bootstrap() {
         .setTitle('light it OMS test assignment')
         .setDescription('The OMS API documentation')
         .setVersion('1.0')
-        .addTag('oms')
         .addBearerAuth()
         .build();
 
