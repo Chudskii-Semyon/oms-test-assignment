@@ -10,6 +10,9 @@
 
 ### Installing
 ```
+yarn
+```
+```
 yarn build
 ```
 ```
@@ -23,6 +26,13 @@ yarn start:dev
 ```
 
 ### Api documentation
-You can use Swagger doc (recommend) which you can access by [localhost:3000/api](localhost:3000/api) or attached insomnia
+You can use Swagger doc (recommend) which you can access by [localhost:3000/api](localhost:3000/api) or attached insomnia collection
+> All employees have password **123456**
+
+### Coverage
+To run unit tests with coverage:
+```
+yarn test:cov
+```
 
 
