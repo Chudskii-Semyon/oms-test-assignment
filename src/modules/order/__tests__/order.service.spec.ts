@@ -57,7 +57,7 @@ describe('OrderService', () => {
         it('should return order', async () => {
             const mockOrderRepositorySpy = jest.spyOn(mockOrderRepository, 'findOneOrFail');
 
-            const query = { id: mockOrder.id };
+            const query = mockOrder.id;
 
             const result = await service.getOrder(args);
 
@@ -82,8 +82,8 @@ describe('OrderService', () => {
     });
 
     describe('getOrders', () => {
-        const start = new Date().toISOString();
-        const end = new Date().toISOString();
+        const start = new Date();
+        const end = new Date();
         const args: GetOrdersDto = { start, end };
 
         it('should return orders', async () => {
@@ -128,7 +128,7 @@ describe('OrderService', () => {
             const createOrderQuery = {
                 product: mockProduct,
                 discount,
-                cashierId,
+                cashier: {id: cashierId},
                 total,
                 status: OrderStatusEnum.CREATED,
             } as Order;
