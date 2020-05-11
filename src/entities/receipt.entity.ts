@@ -11,12 +11,14 @@ import {
 } from 'typeorm';
 import { Order } from './order.entity';
 import { Product } from './product.entity';
+import { ApiHideProperty } from '@nestjs/swagger';
 
 @Entity()
 export class Receipt {
     @PrimaryGeneratedColumn()
     public id: number;
 
+    @ApiHideProperty()
     @OneToOne(() => Order)
     @JoinColumn()
     public order: Order;

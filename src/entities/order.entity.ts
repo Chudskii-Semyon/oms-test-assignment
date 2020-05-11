@@ -12,6 +12,7 @@ import { Product } from './product.entity';
 import { Employee } from './employee.entity';
 import { OrderStatusEnum } from '../enums/order-status.enum';
 import { Min } from 'class-validator';
+import { ApiHideProperty } from '@nestjs/swagger';
 
 @Entity()
 export class Order {
@@ -37,12 +38,14 @@ export class Order {
     @Index()
     public status: OrderStatusEnum;
 
+    @ApiHideProperty()
     @ManyToOne(type => Employee)
     public cashier: Employee;
 
     @RelationId((order: Order) => order.cashier)
     public cashierId: number;
 
+    @ApiHideProperty()
     @ManyToOne(type => Employee, { nullable: true })
     public shopAssistant: Employee;
 

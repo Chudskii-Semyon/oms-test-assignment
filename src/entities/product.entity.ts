@@ -20,8 +20,7 @@ export class Product {
     @Min(0)
     public price: number;
 
-    // @CreateDateColumn({ type: 'timestamp' })
-    @Column({ type: 'timestamp' })
+    @CreateDateColumn({ type: 'timestamp' })
     public createdAt: Date;
 
     @UpdateDateColumn({ type: 'timestamp' })
