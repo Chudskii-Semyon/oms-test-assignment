@@ -26,7 +26,7 @@ yarn start:dev
 ```
 
 ### Api documentation
-You can use Swagger doc (recommend) which you can access by [localhost:3000/api](localhost:3000/api) or attached insomnia collection
+You can use Swagger doc (recommend) which you can access by [localhost:3000/api](localhost:3000/api) or insomnia collection `api-collection.json` file in root folder
 > All employees have password **123456**
 
 ### Coverage
