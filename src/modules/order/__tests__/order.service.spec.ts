@@ -128,7 +128,7 @@ describe('OrderService', () => {
             const createOrderQuery = {
                 product: mockProduct,
                 discount,
-                cashier: {id: cashierId},
+                cashier: { id: cashierId },
                 total,
                 status: OrderStatusEnum.CREATED,
             } as Order;
@@ -177,14 +177,23 @@ describe('OrderService', () => {
     describe('updateOrderStatus', () => {
 
         it('should update and return updated order', async () => {
-            const expectedResult: Order = { ...mockOrder, status: OrderStatusEnum.PAID };
-
+            const expectedResult: Order = {
+                ...mockOrder,
+                status: OrderStatusEnum.PAID,
+            };
+            const mockOrderWithCompletedStatus = {
+                ...mockOrder,
+                status: OrderStatusEnum.COMPLETED,
+            };
             const mockOrderRepositorySaveSpy = jest.spyOn(mockOrderRepository, 'save')
                 .mockReturnValue(expectedResult);
             const mockOrderRepositoryFindOneOrFailSpy = jest.spyOn(mockOrderRepository, 'findOneOrFail')
-                .mockReturnValue(mockOrder);
+                .mockReturnValue(mockOrderWithCompletedStatus);
 
-            const args: UpdateOrderStatusDto = { orderId: mockOrder.id, status: OrderStatusEnum.PAID };
+            const args: UpdateOrderStatusDto = {
+                orderId: mockOrder.id,
+                status: OrderStatusEnum.PAID
+            };
             const saveOrderQuery = {
                 ...mockOrder,
                 status: OrderStatusEnum.PAID,
@@ -198,7 +207,10 @@ describe('OrderService', () => {
         });
 
         it('should throw FORBIDDEN_RESOURCE_ERROR', async () => {
-            const args: UpdateOrderStatusDto = {orderId: mockOrder.id, status: OrderStatusEnum.COMPLETED}
+            const args: UpdateOrderStatusDto = {
+                orderId: mockOrder.id,
+                status: OrderStatusEnum.COMPLETED
+            };
             try {
                 await service.updateOrderStatus(args, mockEmployee);
 
