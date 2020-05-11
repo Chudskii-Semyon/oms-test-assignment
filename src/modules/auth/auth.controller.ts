@@ -3,7 +3,9 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './DTOs/login.dto';
 import { AuthDto } from './DTOs/auth.dto';
 import { LoggerService } from '../../logger/logger.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
     private readonly loggerContext = this.constructor.name;

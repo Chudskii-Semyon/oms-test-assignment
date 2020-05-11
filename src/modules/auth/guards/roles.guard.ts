@@ -19,7 +19,7 @@ export class RolesGuard implements CanActivate {
 
         const user: Employee = request.user;
 
-        if (roles.includes(user.role) || user.role === EmployeeRoleEnum.ADMIN) {
+        if (roles.includes(user.role)) {
             return true;
         }
 
