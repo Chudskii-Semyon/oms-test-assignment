@@ -19,8 +19,10 @@ import { Employee } from '../../entities/employee.entity';
 import { EmployeeRoleEnum } from '../../enums/employee-role.enum';
 import { ForbiddenResourceError } from '../../errors/ForbiddenResourceError';
 import { CouldNotUpdateOrderError } from '../../errors/CouldNotUpdateOrderError';
+import { OrderAlreadyCompletedError } from '../../errors/OrderAlreadyCompletedError';
+import { OrderNotCompletedError } from '../../errors/OrderNotCompletedError';
 
-const { COMPLETED, PAID } = OrderStatusEnum;
+const { COMPLETED, PAID, CREATED } = OrderStatusEnum;
 const { SHOP_ASSISTANT, CASHIER } = EmployeeRoleEnum;
 
 @Injectable()
@@ -243,6 +245,10 @@ export class OrderService {
             throw new ForbiddenResourceError();
         }
 
+        if (order.status !== CREATED) {
+            throw new OrderAlreadyCompletedError(`order with id: ${order.id} already completed`);
+        }
+
         try {
             return this.orderRepository.save({
                 ...order,
@@ -279,6 +285,10 @@ export class OrderService {
 
         if (cashierId !== employeeId || role !== CASHIER) {
             throw new ForbiddenResourceError();
+        }
+
+        if (order.status !== COMPLETED) {
+            throw new OrderNotCompletedError(`order with id: ${order.id} not completed yet.`);
         }
 
         try {
