@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Initial1589153283450 implements MigrationInterface {
-    name = 'Initial1589153283450';
+export class Initial1589158721294 implements MigrationInterface {
+    name = 'Initial1589158721294';
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "employee_role_enum" AS ENUM('CASHIER', 'ACCOUNTANT', 'SHOP_ASSISTANT')`, undefined);
