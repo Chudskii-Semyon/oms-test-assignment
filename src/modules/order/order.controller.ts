@@ -22,9 +22,17 @@ import { GetOrdersDto } from './DTOs/get-orders.dto';
 import { GetOrderDto } from './DTOs/get-order.dto';
 import { Employee } from '../../entities/employee.entity';
 import { UpdateOrderStatusDto } from './DTOs/update-order-status.dto';
+import {
+    ApiBearerAuth,
+    ApiOperation,
+    ApiResponse,
+    ApiTags,
+} from '@nestjs/swagger';
 
 const { CASHIER, ACCOUNTANT, SHOP_ASSISTANT } = EmployeeRoleEnum;
 
+@ApiTags('orders')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('orders')
 export class OrderController {
@@ -36,6 +44,10 @@ export class OrderController {
     ) {
     }
 
+    @ApiOperation({
+        description: 'Endpoint to get orders for specific span of time. ' +
+            'Only employee with role ACCOUNTANT have access to this endpoint',
+    })
     @Get()
     @Roles(ACCOUNTANT)
     public async getOrders(@Query() dateRange: GetOrdersDto): Promise<Order[]> {
@@ -50,6 +62,10 @@ export class OrderController {
         return this.orderService.getOrders(dateRange);
     }
 
+    @ApiOperation({
+        description: 'Endpoint to get order. Only employee with role' +
+            ' ACCOUNTANT/SHOP_ASSISTANT have access to this endpoint',
+    })
     @Get(':orderId')
     @Roles(SHOP_ASSISTANT, ACCOUNTANT)
     public async getOrder(@Param() getOrderInput: GetOrderDto): Promise<Order> {
@@ -65,21 +81,36 @@ export class OrderController {
         return this.orderService.getOrder(getOrderInput);
     }
 
+    @ApiOperation({
+        description: 'Endpoint for order creation. Only employee with role ' +
+            'CASHIER have access to this endpoint',
+    })
     @Post()
     @Roles(CASHIER)
     public async createOrder(@Body() createOrderInput: CreateOrderDto, @Req() req: Request): Promise<Order> {
         const method = 'createOrder';
+        const { id } = req.user as Employee;
+
         this.logger.log({
                 message: 'proceed createOrder',
                 body: createOrderInput,
+                employeeId: id,
                 method,
             }, this.loggerContext,
         );
 
-        const { id } = req.user as Employee;
         return await this.orderService.createOrder(createOrderInput, id);
     }
 
+    @ApiOperation({
+        description: 'Endpoint to update order status. Only employee with role ' +
+            'SHOP_ASSISTANT / CASHIER have access to this endpoint. SHOP_ASSISTANT' +
+            ' only can update order status to COMPLETED while CASHIER to PAID',
+    })
+    @ApiResponse({
+        status: 403,
+        description: 'May occur if employee dont have access to this source or specific action',
+    })
     @Put(':orderId/status')
     @Roles(SHOP_ASSISTANT, CASHIER)
     public async updateOrderStatus(

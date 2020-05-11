@@ -133,7 +133,7 @@ export class OrderService {
                 product,
                 discount,
                 total: product.price - discount,
-                cashierId: employeeId,
+                cashier: { id: employeeId },
                 status: OrderStatusEnum.CREATED,
             });
 
@@ -247,7 +247,7 @@ export class OrderService {
             return this.orderRepository.save({
                 ...order,
                 status,
-                shopAssistantId: employee.id,
+                shopAssistant: { id: employee.id },
             });
         } catch (e) {
             const errorMessage = `Could not update order with id: ${order.id} to status: ${status}.`;
