@@ -8,6 +8,10 @@ import { ReceiptAlreadyExistsError } from '../../errors/ReceiptAlreadyExistsErro
 import { Order } from '../../entities/order.entity';
 import { OrderNotFoundError } from '../../errors/OrderNotFoundError';
 import { CouldNotCreateReceiptError } from '../../errors/CouldNotCreateReceiptError';
+import { OrderStatusEnum } from '../../enums/order-status.enum';
+import { OrderNotCompletedError } from '../../errors/OrderNotCompletedError';
+
+const { COMPLETED } = OrderStatusEnum;
 
 @Injectable()
 export class ReceiptService {
@@ -31,13 +35,18 @@ export class ReceiptService {
 
         let receipt: Receipt;
 
-        receipt = await this.receiptRepository.findOne({ orderId });
+        receipt = await this.receiptRepository.findOne({
+            where: {
+                order: { id: orderId },
+            },
+        });
 
         if (receipt) {
             const errorMessage = `Receipt for order with id: ${orderId} already exists!`;
             this.logger.error({
                     message: errorMessage,
-                    id: orderId,
+                    orderId,
+                    receipt,
                     method,
                 }, null,
                 this.loggerContext,
@@ -59,7 +68,6 @@ export class ReceiptService {
                     method,
                 }, this.loggerContext,
             );
-
         } catch (e) {
             const errorMessage = `Could not find order with id: ${orderId}.`;
 
@@ -74,13 +82,26 @@ export class ReceiptService {
             throw new OrderNotFoundError(errorMessage);
         }
 
+        if (order.status !== COMPLETED) {
+            const errorMessage = `Order with id: ${order.id} is not completed yet!`;
+
+            this.logger.error({
+                    message: errorMessage,
+                    order,
+                    employeeId,
+                    method,
+                },
+                null,
+                this.loggerContext,
+            );
+            throw new OrderNotCompletedError(errorMessage);
+        }
         let newReceipt: Receipt;
         try {
             newReceipt = this.receiptRepository.create(
                 this.buildReceiptFromOrder(order),
             );
 
-            this.logger.log(newReceipt);
             return this.receiptRepository.save(newReceipt);
         } catch (e) {
             const errorMessage = 'Could not save receipt to database.';
@@ -101,7 +122,7 @@ export class ReceiptService {
         const method = 'buildReceiptFromOrder';
         const { id, total, discount, createdAt, product } = order;
         const receipt = {
-            orderId: id,
+            order: { id },
             total,
             discount,
             product,

@@ -134,7 +134,7 @@ export class OrderService {
             newOrder = this.orderRepository.create({
                 product,
                 discount,
-                total: product.price - discount,
+                total: +(product.price - discount).toFixed(2),
                 cashier: { id: employeeId },
                 status: OrderStatusEnum.CREATED,
             });
@@ -202,7 +202,7 @@ export class OrderService {
     private calculateProductDiscount(product: Product): number {
         const method = 'calculateProductDiscount';
         this.logger.log({
-                message: 'Start calculating proudct discount',
+                message: 'Start calculating product discount',
                 product,
                 method,
             },
@@ -215,7 +215,7 @@ export class OrderService {
         const monthAgo = new Date(currentDate.setMonth(currentDate.getMonth() - numberOfMonths));
 
         if (productCreatedDate <= monthAgo) {
-            return product.price / 100 * percent;
+            return +(product.price / 100 * percent).toFixed(2);
         }
 
         return 0;
@@ -242,11 +242,29 @@ export class OrderService {
 
         const { role } = employee;
         if (role !== SHOP_ASSISTANT) {
+            this.logger.error({
+                    message: 'Employee must have SHOP_ASSISTANT role for this action.',
+                    statusToUpdate: status,
+                    order,
+                    employee,
+                },
+                null,
+                this.loggerContext,
+            );
             throw new ForbiddenResourceError();
         }
 
         if (order.status !== CREATED) {
-            throw new OrderAlreadyCompletedError(`order with id: ${order.id} already completed`);
+            this.logger.error({
+                    message: 'Order already completed.',
+                    statusToUpdate: status,
+                    order,
+                    employee,
+                },
+                null,
+                this.loggerContext,
+            );
+            throw new OrderAlreadyCompletedError(`order with id: ${order.id} already completed!`);
         }
 
         try {
@@ -262,7 +280,7 @@ export class OrderService {
                     message: errorMessage + ` Error: ${e.message}`,
                     order,
                     employee,
-                    status,
+                    statusToUpdate: status,
                     method,
                 },
                 e.stack,
@@ -284,11 +302,29 @@ export class OrderService {
         const { role, id: employeeId } = employee;
 
         if (cashierId !== employeeId || role !== CASHIER) {
+            this.logger.error({
+                    message: 'Employee does not have access to this action / source',
+                    statusToUpdate: status,
+                    order,
+                    employee,
+                },
+                null,
+                this.loggerContext,
+            );
             throw new ForbiddenResourceError();
         }
 
         if (order.status !== COMPLETED) {
-            throw new OrderNotCompletedError(`order with id: ${order.id} not completed yet.`);
+            this.logger.error({
+                    message: 'Order is not completed yet!',
+                    statusToUpdate: status,
+                    employee,
+                    order,
+                },
+                null,
+                this.loggerContext,
+            );
+            throw new OrderNotCompletedError(`order with id: ${order.id} is not completed yet!`);
         }
 
         try {
