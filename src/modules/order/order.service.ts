@@ -17,10 +17,11 @@ import { CouldNotCreateOrderError } from '../../errors/CouldNotCreateOrderError'
 import { UpdateOrderStatusDto } from './DTOs/update-order-status.dto';
 import { Employee } from '../../entities/employee.entity';
 import { EmployeeRoleEnum } from '../../enums/employee-role.enum';
-import { ForbiddenResourceError } from '../../errors/ForbiddenResourceError';
-import { CouldNotUpdateOrderError } from '../../errors/CouldNotUpdateOrderError';
-import { OrderAlreadyCompletedError } from '../../errors/OrderAlreadyCompletedError';
-import { OrderNotCompletedError } from '../../errors/OrderNotCompletedError';
+import {
+    UpdateOrderContext,
+    UpdateOrderStatusToCompletedStrategy,
+    UpdateOrderStatusToPaidStrategy,
+} from './strategies/update-order.strategy';
 
 const { COMPLETED, PAID, CREATED } = OrderStatusEnum;
 const { SHOP_ASSISTANT, CASHIER } = EmployeeRoleEnum;
@@ -31,6 +32,10 @@ export class OrderService {
 
     constructor(
         private readonly logger: LoggerService,
+        // strategy for updating order
+        private readonly updateOrderContext: UpdateOrderContext,
+        private readonly updateOrderStatusToCompletedStrategy: UpdateOrderStatusToCompletedStrategy,
+        private readonly updateOrderStatusToPaidStrategy: UpdateOrderStatusToPaidStrategy,
         @Inject(CONFIG_TOKEN)
         private readonly config: IConfigSchema,
         @InjectRepository(Order)
@@ -167,11 +172,7 @@ export class OrderService {
         employee: Employee,
     ): Promise<Order> {
         const method = 'updateOrderStatus';
-
         const { status, orderId } = updateOrderStatusInput;
-        const { role } = employee;
-
-        this.validateStatusOrFail(status, role);
 
         let order: Order;
         try {
@@ -190,12 +191,34 @@ export class OrderService {
             throw new OrderNotFoundError(errorMessage);
         }
 
-        if (status === PAID) {
-            return this.updateOrderStatusToPaid(order, employee, status);
+        if (status === COMPLETED) {
+            this.logger.log({
+                    message: 'Updating order status to COMPLETED using updateOrderStatusToCompletedStrategy',
+                    order,
+                    method,
+                },
+                this.loggerContext,
+            );
+
+            this.updateOrderContext.setStrategy(this.updateOrderStatusToCompletedStrategy);
+
+            this.updateOrderContext.checkAccess(order, employee);
+            return this.updateOrderContext.updateOrder(order, employee, updateOrderStatusInput);
         }
 
-        if (status === COMPLETED) {
-            return this.updateOrderStatusToCompleted(order, employee, status);
+        if (status === PAID) {
+            this.logger.log({
+                    message: 'Updating order status to PAID using updateOrderStatusToPaidStrategy',
+                    order,
+                    method,
+                },
+                this.loggerContext,
+            );
+
+            this.updateOrderContext.setStrategy(this.updateOrderStatusToPaidStrategy);
+
+            this.updateOrderContext.checkAccess(order, employee);
+            return this.updateOrderContext.updateOrder(order, employee, updateOrderStatusInput);
         }
     }
 
@@ -219,134 +242,5 @@ export class OrderService {
         }
 
         return 0;
-    }
-
-    private validateStatusOrFail(status, role): boolean {
-        if (status === COMPLETED && role !== SHOP_ASSISTANT) {
-            throw new ForbiddenResourceError();
-        }
-
-        if (status === PAID && role !== CASHIER) {
-            throw new ForbiddenResourceError();
-        }
-
-        return true;
-    }
-
-    private async updateOrderStatusToCompleted(
-        order: Order,
-        employee: Employee,
-        status: OrderStatusEnum,
-    ): Promise<Order> {
-        const method = 'findAndUpdateOrderStatusToCompleted';
-
-        const { role } = employee;
-        if (role !== SHOP_ASSISTANT) {
-            this.logger.error({
-                    message: 'Employee must have SHOP_ASSISTANT role for this action.',
-                    statusToUpdate: status,
-                    order,
-                    employee,
-                },
-                null,
-                this.loggerContext,
-            );
-            throw new ForbiddenResourceError();
-        }
-
-        if (order.status !== CREATED) {
-            this.logger.error({
-                    message: 'Order already completed.',
-                    statusToUpdate: status,
-                    order,
-                    employee,
-                },
-                null,
-                this.loggerContext,
-            );
-            throw new OrderAlreadyCompletedError(`order with id: ${order.id} already completed!`);
-        }
-
-        try {
-            return this.orderRepository.save({
-                ...order,
-                status,
-                shopAssistant: { id: employee.id },
-            });
-        } catch (e) {
-            const errorMessage = `Could not update order with id: ${order.id} to status: ${status}.`;
-
-            this.logger.error({
-                    message: errorMessage + ` Error: ${e.message}`,
-                    order,
-                    employee,
-                    statusToUpdate: status,
-                    method,
-                },
-                e.stack,
-                this.loggerContext,
-            );
-
-            throw new CouldNotUpdateOrderError(errorMessage);
-        }
-    }
-
-    private async updateOrderStatusToPaid(
-        order: Order,
-        employee: Employee,
-        status: OrderStatusEnum,
-    ): Promise<Order> {
-        const method = 'updateOrderStatusToPaid';
-
-        const { cashierId } = order;
-        const { role, id: employeeId } = employee;
-
-        if (cashierId !== employeeId || role !== CASHIER) {
-            this.logger.error({
-                    message: 'Employee does not have access to this action / source',
-                    statusToUpdate: status,
-                    order,
-                    employee,
-                },
-                null,
-                this.loggerContext,
-            );
-            throw new ForbiddenResourceError();
-        }
-
-        if (order.status !== COMPLETED) {
-            this.logger.error({
-                    message: 'Order is not completed yet!',
-                    statusToUpdate: status,
-                    employee,
-                    order,
-                },
-                null,
-                this.loggerContext,
-            );
-            throw new OrderNotCompletedError(`order with id: ${order.id} is not completed yet!`);
-        }
-
-        try {
-            return this.orderRepository.save({
-                ...order,
-                status,
-            });
-        } catch (e) {
-            const errorMessage = `Could not update order with id: ${order.id} to status: ${status}.`;
-
-            this.logger.error({
-                    message: errorMessage + ` Error: ${e.message}`,
-                    order,
-                    employee,
-                    status,
-                    method,
-                },
-                e.stack,
-                this.loggerContext,
-            );
-
-            throw new CouldNotUpdateOrderError(errorMessage);
-        }
     }
 }

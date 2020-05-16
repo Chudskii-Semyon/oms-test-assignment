@@ -20,6 +20,16 @@ import { mockProduct } from '../../../__tests__/mocks/product.mock';
 import { mockEmployee } from '../../../__tests__/mocks/employee.mock';
 import { UpdateOrderStatusDto } from '../DTOs/update-order-status.dto';
 import { OrderStatusEnum } from '../../../enums/order-status.enum';
+import {
+    UpdateOrderContext,
+    UpdateOrderStatusToCompletedStrategy,
+    UpdateOrderStatusToPaidStrategy,
+} from '../strategies/update-order.strategy';
+import {
+    mockUpdateOrderContext,
+    mockUpdateOrderStatusToCompletedStrategy,
+    mockUpdateOrderStatusToPaidStrategy,
+} from './mocks/update-order-strategy.mock';
 
 describe('Order Controller', () => {
     let controller: OrderController;
@@ -31,8 +41,20 @@ describe('Order Controller', () => {
                 TypeOrmModule.forFeature([Order, Product]),
             ],
             controllers: [OrderController],
-            providers: [LoggerService, OrderService],
+            providers: [
+                LoggerService,
+                OrderService,
+                UpdateOrderContext,
+                UpdateOrderStatusToPaidStrategy,
+                UpdateOrderStatusToCompletedStrategy,
+            ],
         })
+            .overrideProvider(UpdateOrderContext)
+            .useValue(mockUpdateOrderContext)
+            .overrideProvider(UpdateOrderStatusToCompletedStrategy)
+            .useValue(mockUpdateOrderStatusToCompletedStrategy)
+            .overrideProvider(UpdateOrderStatusToPaidStrategy)
+            .useValue(mockUpdateOrderStatusToPaidStrategy)
             .overrideProvider(ORDER_REPOSITORY_TOKEN)
             .useValue(mockOrderRepository)
             .overrideProvider(PRODUCT_REPOSITORY_TOKEN)
@@ -63,8 +85,8 @@ describe('Order Controller', () => {
     });
 
     describe('getOrders', () => {
-        const start = new Date().toISOString();
-        const end = new Date().toISOString();
+        const start = new Date();
+        const end = new Date();
         const args: GetOrdersDto = { start, end };
 
         it('should return orders', async () => {

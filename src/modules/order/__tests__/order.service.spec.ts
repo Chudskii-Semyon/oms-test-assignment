@@ -22,7 +22,16 @@ import { mockOrderRepository } from '../../../__tests__/mocks/order-repository.m
 import { mockProductRepository } from '../../../__tests__/mocks/product-repository.mock';
 import { COULD_NOT_CREATE_ORDER_ERROR } from '../../../errors/CouldNotCreateOrderError';
 import { UpdateOrderStatusDto } from '../DTOs/update-order-status.dto';
-import { FORBIDDEN_RESOURCE_ERROR } from '../../../errors/ForbiddenResourceError';
+import {
+    UpdateOrderContext,
+    UpdateOrderStatusToCompletedStrategy,
+    UpdateOrderStatusToPaidStrategy
+} from '../strategies/update-order.strategy';
+import {
+    mockUpdateOrderContext,
+    mockUpdateOrderStatusToCompletedStrategy,
+    mockUpdateOrderStatusToPaidStrategy,
+} from './mocks/update-order-strategy.mock';
 
 describe('OrderService', () => {
     let service: OrderService;
@@ -36,8 +45,17 @@ describe('OrderService', () => {
             providers: [
                 OrderService,
                 LoggerService,
+                UpdateOrderContext,
+                UpdateOrderStatusToPaidStrategy,
+                UpdateOrderStatusToCompletedStrategy,
             ],
         })
+            .overrideProvider(UpdateOrderContext)
+            .useValue(mockUpdateOrderContext)
+            .overrideProvider(UpdateOrderStatusToCompletedStrategy)
+            .useValue(mockUpdateOrderStatusToCompletedStrategy)
+            .overrideProvider(UpdateOrderStatusToPaidStrategy)
+            .useValue(mockUpdateOrderStatusToPaidStrategy)
             .overrideProvider(ORDER_REPOSITORY_TOKEN)
             .useValue(mockOrderRepository)
             .overrideProvider(PRODUCT_REPOSITORY_TOKEN)
@@ -176,48 +194,68 @@ describe('OrderService', () => {
 
     describe('updateOrderStatus', () => {
 
-        it('should update and return updated order', async () => {
-            const expectedResult: Order = {
-                ...mockOrder,
-                status: OrderStatusEnum.PAID,
-            };
+        it('should update order status to PAID and return updated order', async () => {
             const mockOrderWithCompletedStatus = {
                 ...mockOrder,
                 status: OrderStatusEnum.COMPLETED,
             };
-            const mockOrderRepositorySaveSpy = jest.spyOn(mockOrderRepository, 'save')
-                .mockReturnValue(expectedResult);
+            const mockOrderWithPaidStatus = {
+                ...mockOrder,
+                status: OrderStatusEnum.PAID,
+            };
+
+            const updateOrderContextSpy = jest.spyOn(mockUpdateOrderContext, 'setStrategy');
+            const updateOrderContextSpyAccessCheckSpy = jest.spyOn(mockUpdateOrderContext, 'checkAccess')
+                .mockReturnValue(true);
+            const updateOrderContextSpyUpdateOrderSpy = jest.spyOn(mockUpdateOrderContext, 'updateOrder')
+                .mockReturnValue(mockOrderWithPaidStatus);
             const mockOrderRepositoryFindOneOrFailSpy = jest.spyOn(mockOrderRepository, 'findOneOrFail')
                 .mockReturnValue(mockOrderWithCompletedStatus);
 
             const args: UpdateOrderStatusDto = {
                 orderId: mockOrder.id,
-                status: OrderStatusEnum.PAID
-            };
-            const saveOrderQuery = {
-                ...mockOrder,
                 status: OrderStatusEnum.PAID,
-            } as Order;
+            };
 
             const result = await service.updateOrderStatus(args, mockEmployee);
 
-            expect(result).toEqual(expectedResult);
             expect(mockOrderRepositoryFindOneOrFailSpy).toBeCalledWith(mockOrder.id);
-            expect(mockOrderRepositorySaveSpy).toBeCalledWith(saveOrderQuery);
+            expect(updateOrderContextSpy).toBeCalledWith(mockUpdateOrderStatusToPaidStrategy);
+            expect(updateOrderContextSpyAccessCheckSpy).toBeCalledWith(mockOrderWithCompletedStatus, mockEmployee);
+            expect(updateOrderContextSpyUpdateOrderSpy).toBeCalledWith(mockOrderWithCompletedStatus, mockEmployee, args);
+            expect(result).toEqual(mockOrderWithPaidStatus);
         });
 
-        it('should throw FORBIDDEN_RESOURCE_ERROR', async () => {
+        it('should update order status to COMPLETED and return updated order', async () => {
+            const mockOrderWithCreatedStatus = {
+                ...mockOrder,
+                status: OrderStatusEnum.CREATED,
+            };
+            const mockOrderWithCompletedStatus: Order = {
+                ...mockOrder,
+                status: OrderStatusEnum.COMPLETED,
+            };
+
+            const mockOrderRepositoryFindOneOrFailSpy = jest.spyOn(mockOrderRepository, 'findOneOrFail')
+                .mockReturnValue(mockOrderWithCreatedStatus);
+            const updateOrderContextSpy = jest.spyOn(mockUpdateOrderContext, 'setStrategy');
+            const updateOrderContextSpyAccessCheckSpy = jest.spyOn(mockUpdateOrderContext, 'checkAccess')
+                .mockReturnValue(true);
+            const updateOrderContextSpyUpdateOrderSpy = jest.spyOn(mockUpdateOrderContext, 'updateOrder')
+                .mockReturnValue(mockOrderWithCompletedStatus);
+
             const args: UpdateOrderStatusDto = {
                 orderId: mockOrder.id,
-                status: OrderStatusEnum.COMPLETED
+                status: OrderStatusEnum.COMPLETED,
             };
-            try {
-                await service.updateOrderStatus(args, mockEmployee);
 
-                fail('did not throw expected error');
-            } catch (e) {
-                expect(e.response.status).toBe(FORBIDDEN_RESOURCE_ERROR);
-            }
+            const result = await service.updateOrderStatus(args, mockEmployee);
+
+            expect(updateOrderContextSpy).toBeCalledWith(mockUpdateOrderStatusToCompletedStrategy);
+            expect(mockOrderRepositoryFindOneOrFailSpy).toBeCalledWith(mockOrder.id);
+            expect(updateOrderContextSpyAccessCheckSpy).toBeCalledWith(mockOrderWithCreatedStatus, mockEmployee);
+            expect(updateOrderContextSpyUpdateOrderSpy).toBeCalledWith(mockOrderWithCreatedStatus, mockEmployee, args);
+            expect(result).toEqual(mockOrderWithCompletedStatus);
         });
     });
 });
