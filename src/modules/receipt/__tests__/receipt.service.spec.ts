@@ -16,6 +16,7 @@ import { mockReceipt } from '../../../__tests__/mocks/receipt.mock';
 import { RECEIPT_ALREADY_EXISTS_ERROR } from '../../../errors/ReceiptAlreadyExistsError';
 import { ORDER_NOT_FOUND_ERROR } from '../../../errors/OrderNotFoundError';
 import { COULD_NOT_CREATE_RECEIPT_ERROR } from '../../../errors/CouldNotCreateReceiptError';
+import { OrderStatusEnum } from '../../../enums/order-status.enum';
 
 describe('ReceiptService', () => {
     let service: ReceiptService;
@@ -40,9 +41,14 @@ describe('ReceiptService', () => {
 
     describe('createReceipt', () => {
         const args: CreateReceiptDto = { orderId: mockOrder.id };
+        const mockCompletedOrder = {
+            ...mockOrder,
+            status: OrderStatusEnum.COMPLETED,
+        };
 
         it('should create and return receipt', async () => {
-            const mockOrderRepositorySpy = jest.spyOn(mockOrderRepository, 'findOneOrFail');
+            const mockOrderRepositorySpy = jest.spyOn(mockOrderRepository, 'findOneOrFail')
+                .mockReturnValue(mockCompletedOrder);
             const mockReceiptRepositoryCreateSpy = jest.spyOn(mockReceiptRepository, 'create');
             const mockReceiptRepositorySaveSpy = jest.spyOn(mockReceiptRepository, 'save');
             const mockReceiptRepositoryFindOneSpy = jest.spyOn(mockReceiptRepository, 'findOne')
@@ -53,11 +59,13 @@ describe('ReceiptService', () => {
                 cashierId: mockEmployee.id,
             };
             const findReceiptQuery = {
-                orderId: mockOrder.id,
+                where: {
+                    order: { id: mockOrder.id },
+                },
             };
 
             const createReceipt = {
-                orderId: mockOrder.id,
+                order: {id: mockOrder.id},
                 total: mockOrder.total,
                 discount: mockOrder.discount,
                 product: mockOrder.product,
@@ -106,7 +114,7 @@ describe('ReceiptService', () => {
             jest.spyOn(mockReceiptRepository, 'findOne')
                 .mockImplementation(() => null);
             jest.spyOn(mockOrderRepository, 'findOneOrFail')
-                .mockReturnValue(mockOrder);
+                .mockReturnValue(mockCompletedOrder);
             jest.spyOn(mockReceiptRepository, 'save')
                 .mockImplementation(() => {
                     throw new Error();
@@ -124,7 +132,8 @@ describe('ReceiptService', () => {
         it('should throw COULD_NOT_CREATE_RECEIPT_ERROR if error occurred on receipt creation', async () => {
             jest.spyOn(mockReceiptRepository, 'findOne')
                 .mockImplementation(() => null);
-            jest.spyOn(mockOrderRepository, 'findOneOrFail');
+            jest.spyOn(mockOrderRepository, 'findOneOrFail')
+                .mockReturnValue(mockCompletedOrder);
             jest.spyOn(mockReceiptRepository, 'create')
                 .mockImplementation(() => {
                     throw new Error();
