@@ -17,13 +17,11 @@ const { COMPLETED, CREATED, PAID } = OrderStatusEnum;
 
 @Injectable()
 export class UpdateOrderContext {
-    private readonly loggerContext = this.constructor.name;
     private strategy: UpdateOrderStrategy;
 
-    constructor() {
-    }
+    constructor() {}
 
-    public setStrategy<T>(strategy: UpdateOrderStrategy) {
+    public setStrategy(strategy: UpdateOrderStrategy) {
         this.strategy = strategy;
     }
 
@@ -56,10 +54,21 @@ export class UpdateOrderStatusToCompletedStrategy implements UpdateOrderStrategy
     }
 
     public checkAccess(orderToUpdate: Order, employee: Employee): boolean {
+        const method = 'checkAccess';
         const { role } = employee;
         const hasAccess = this.EMPLOYEE_ROLES.includes(role);
 
         if (!hasAccess) {
+            this.logger.error({
+                    message: `employee doesn't have permission to this source`,
+                    statusToUpdate: COMPLETED,
+                    orderToUpdate,
+                    employee,
+                    method,
+                },
+                null,
+                this.loggerContext,
+            );
             throw new ForbiddenResourceError();
         }
 
@@ -121,11 +130,21 @@ export class UpdateOrderStatusToPaidStrategy implements UpdateOrderStrategy {
     }
 
     public checkAccess(orderToUpdate: Order, employee: Employee): boolean {
-        this.logger.log(orderToUpdate, this.loggerContext);
+        const method = 'checkAccess';
         const { role } = employee;
         const hasAccess = this.EMPLOYEE_ROLES.includes(role);
 
         if (!hasAccess) {
+            this.logger.error({
+                    message: `employee doesn't have permission to this source`,
+                    statusToUpdate: PAID,
+                    orderToUpdate,
+                    employee,
+                    method,
+                },
+                null,
+                this.loggerContext,
+            );
             throw new ForbiddenResourceError();
         }
 
